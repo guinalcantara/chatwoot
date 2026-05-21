@@ -4,7 +4,9 @@ import { useVuelidate } from '@vuelidate/core';
 import { required, minLength, email } from '@vuelidate/validators';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
+import VueHcaptcha from '@hcaptcha/vue3-hcaptcha';
 import { DEFAULT_REDIRECT_URL } from 'dashboard/constants/globals';
 import FormInput from '../../../../../components/Form/Input.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
@@ -17,6 +19,7 @@ const MIN_PASSWORD_LENGTH = 6;
 
 const store = useStore();
 const { t } = useI18n();
+const router = useRouter();
 
 const hCaptcha = ref(null);
 const isPasswordFocused = ref(false);
@@ -74,7 +77,10 @@ const performRegistration = async () => {
   isSignupInProgress.value = true;
   try {
     await register(credentials);
-    window.location = DEFAULT_REDIRECT_URL;
+    router.push({
+      name: 'auth_verify_email',
+      state: { email: credentials.email },
+    });
   } catch (error) {
     const errorMessage = error?.message || t('REGISTER.API.ERROR_MESSAGE');
     if (globalConfig.value.hCaptchaSiteKey) {
@@ -103,53 +109,31 @@ const submit = () => {
 <template>
   <form class="space-y-5" @submit.prevent="submit">
     <div class="space-y-4">
-      <FormInput
-        v-model="credentials.email"
-        type="email"
-        name="email_address"
-        :class="{ error: v$.credentials.email.$error }"
-        :label="$t('REGISTER.EMAIL.LABEL')"
-        :placeholder="$t('REGISTER.EMAIL.PLACEHOLDER')"
-        :has-error="v$.credentials.email.$error"
-        :error-message="$t('REGISTER.EMAIL.ERROR')"
-        @blur="v$.credentials.email.$touch"
-      />
+      <FormInput v-model="credentials.email" type="email" name="email_address"
+        :class="{ error: v$.credentials.email.$error }" :label="$t('REGISTER.EMAIL.LABEL')"
+        :placeholder="$t('REGISTER.EMAIL.PLACEHOLDER')" :has-error="v$.credentials.email.$error"
+        :error-message="$t('REGISTER.EMAIL.ERROR')" @blur="v$.credentials.email.$touch" />
 
       <div class="relative">
-        <FormInput
-          v-model="credentials.password"
-          type="password"
-          name="password"
-          :class="{ error: v$.credentials.password.$error }"
-          :label="$t('LOGIN.PASSWORD.LABEL')"
-          :placeholder="$t('SET_NEW_PASSWORD.PASSWORD.PLACEHOLDER')"
-          :has-error="v$.credentials.password.$error"
-          @focus="isPasswordFocused = true"
-          @blur="
+        <FormInput v-model="credentials.password" type="password" name="password"
+          :class="{ error: v$.credentials.password.$error }" :label="$t('LOGIN.PASSWORD.LABEL')"
+          :placeholder="$t('SET_NEW_PASSWORD.PASSWORD.PLACEHOLDER')" :has-error="v$.credentials.password.$error"
+          @focus="isPasswordFocused = true" @blur="
             isPasswordFocused = false;
-            v$.credentials.password.$touch();
-          "
-        />
+          v$.credentials.password.$touch();
+          " />
       </div>
     </div>
 
-    <NextButton
-      lg
-      type="submit"
-      data-testid="submit_button"
-      class="w-full font-semibold tracking-wide shadow-md hover:shadow-lg"
-      :label="$t('REGISTER.SUBMIT')"
-      :disabled="isSignupInProgress || !isFormValid"
-      :is-loading="isSignupInProgress"
-    />
+    <NextButton lg type="submit" data-testid="submit_button"
+      class="w-full font-semibold tracking-wide shadow-md hover:shadow-lg" :label="$t('REGISTER.SUBMIT')"
+      :disabled="isSignupInProgress || !isFormValid" :is-loading="isSignupInProgress" />
   </form>
 
   <GoogleOAuthButton v-if="showGoogleOAuth" class="mt-4">
     {{ $t('REGISTER.OAUTH.GOOGLE_SIGNUP') }}
   </GoogleOAuthButton>
 
-  <p
-    class="text-sm mt-6 mb-0 text-[#5f6b72] [&>a]:text-[#034d66] [&>a]:font-semibold [&>a]:hover:text-[#023e52]"
-    v-html="termsLink"
-  />
+  <p class="text-sm mt-6 mb-0 text-[#5f6b72] [&>a]:text-[#034d66] [&>a]:font-semibold [&>a]:hover:text-[#023e52]"
+    v-html="termsLink" />
 </template>
