@@ -1,4 +1,4 @@
-name: Auto Update Fork + Docker Publish
+name: Auto Update + Docker Publish(DOM/QUA)
 
 on:
   schedule:
