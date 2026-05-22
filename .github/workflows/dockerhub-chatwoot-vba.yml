@@ -1,58 +1,19 @@
-name: Auto Update Fork + Docker Publish
+name: Publish Docker image (tags only)
 
 on:
-  schedule:
-    # Domingo e quarta às 03:00 UTC
-    - cron: "0 3 * * 0,3"
-
-  workflow_dispatch:
+  push:
+    tags:
+      - "*"
 
 jobs:
-  update-and-build:
+  docker:
     runs-on: ubuntu-latest
-
     permissions:
-      contents: write
+      contents: read
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
-
-      - name: Configure Git
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-
-      - name: Add upstream
-        run: |
-          git remote add upstream https://github.com/chatwoot/chatwoot.git || true
-          git fetch upstream
-
-      - name: Checkout main
-        run: |
-          git checkout main
-
-      - name: Merge upstream/master
-        run: |
-          git merge upstream/master --no-edit
-
-      - name: Push updated main
-        run: |
-          git push origin main
-
-      - name: Generate version tag
-        id: tag
-        run: |
-          TAG=$(date +'%Y.%m.%d-%H%M')
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-
-      - name: Create and push tag
-        run: |
-          git tag ${{ steps.tag.outputs.tag }}
-          git push origin ${{ steps.tag.outputs.tag }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -66,7 +27,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push (multi-arch)
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -74,7 +35,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            guilhermena/chatwoot:${{ steps.tag.outputs.tag }}
+            guilhermena/chatwoot:${{ github.ref_name }}
             guilhermena/chatwoot:latest
           cache-to: type=gha,mode=max
           cache-from: type=gha
