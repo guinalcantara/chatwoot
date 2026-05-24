@@ -20,6 +20,8 @@ import Popover from 'dashboard/components-next/popover/Popover.vue';
 import ComposeNewConversationForm from 'dashboard/components-next/NewConversation/components/ComposeNewConversationForm.vue';
 import { useRouter } from 'vue-router';
 
+import wootConstants from 'dashboard/constants/globals';
+
 const props = defineProps({
   contactId: {
     type: String,
