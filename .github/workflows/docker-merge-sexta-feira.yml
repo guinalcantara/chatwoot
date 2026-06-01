@@ -2,7 +2,7 @@ name: Auto Update + Docker Publish(DOM/QUA/SEX)
 
 on:
   schedule:
-    # Domingo, quarta e sexta às 03:00 UTC
+    # Sexta às 03:00 UTC
     - cron: "0 3 * * 5"
 
   workflow_dispatch:
