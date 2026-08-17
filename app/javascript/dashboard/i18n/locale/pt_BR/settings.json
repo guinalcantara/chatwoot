@@ -719,10 +719,10 @@
         "ERROR": "Não foi possível atualizar os atributos obrigatórios. Por favor, tente novamente"
       },
       "MODAL": {
-        "TITLE": "Resolver conversa",
-        "DESCRIPTION": "Por favor, preencha os seguintes atributos personalizados antes de resolver esta conversa",
+        "TITLE": "Encerrar conversa",
+        "DESCRIPTION": "Por favor, preencha os seguintes atributos personalizados antes de encerrar esta conversa",
         "ACTIONS": {
-          "RESOLVE": "Resolver conversa",
+          "RESOLVE": "Encerrar conversa",
           "CANCEL": "Cancelar"
         },
         "PLACEHOLDERS": {
@@ -773,9 +773,9 @@
     "TOGGLE_MODAL": "Alternar Modal",
     "TITLE": {
       "OPEN_CONVERSATION": "Abrir conversa",
-      "RESOLVE_AND_NEXT": "Resolver e ir para o próximo",
+      "RESOLVE_AND_NEXT": "Encerrar e ir para o próximo",
       "NAVIGATE_DROPDOWN": "Navegar pelos itens suspensos",
-      "RESOLVE_CONVERSATION": "Resolver Conversa",
+      "RESOLVE_CONVERSATION": "Encerrar conversa",
       "GO_TO_CONVERSATION_DASHBOARD": "Ir para Painel de Conversação",
       "ADD_ATTACHMENT": "Adicionar anexo",
       "GO_TO_CONTACTS_DASHBOARD": "Ir para Painel de Contatos",

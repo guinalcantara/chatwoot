@@ -13,7 +13,7 @@
     "ASSIGN_SUCCESFUL": "Conversas atribuídas com sucesso.",
     "ASSIGN_FAILED": "Falha ao atribuir conversas. Por favor, tente novamente.",
     "RESOLVE_SUCCESFUL": "Conversas resolvidas com sucesso.",
-    "RESOLVE_FAILED": "Falha ao resolver conversas. Por favor, tente novamente.",
+    "RESOLVE_FAILED": "Falha ao encerrar conversas. Por favor, tente novamente.",
     "ALL_CONVERSATIONS_SELECTED_ALERT": "Conversas visíveis nesta página só estão selecionadas.",
     "UPDATE": {
       "CHANGE_STATUS": "Alterar status",
@@ -22,8 +22,8 @@
       "UPDATE_FAILED": "Falha ao atualizar conversas. Por favor, tente novamente."
     },
     "RESOLVE": {
-      "ALL_MISSING_ATTRIBUTES": "Não é possível resolver a conversa devido à ausência de atributos obrigatórios",
-      "PARTIAL_SUCCESS": "Algumas conversas exigem atributos obrigatórios antes da resolução e foram ignoradas"
+      "ALL_MISSING_ATTRIBUTES": "Não é possível encerrar a conversa devido à ausência de atributos obrigatórios",
+      "PARTIAL_SUCCESS": "Algumas conversas exigem atributos obrigatórios antes do encerramento e foram ignoradas"
     },
     "LABELS": {
       "ASSIGN_LABELS": "Atribuir rótulo",

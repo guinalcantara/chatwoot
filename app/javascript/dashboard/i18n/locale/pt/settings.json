@@ -719,10 +719,10 @@
         "ERROR": "Could not update required attributes, please try again"
       },
       "MODAL": {
-        "TITLE": "Resolver conversa",
-        "DESCRIPTION": "Please fill in the following custom attributes before resolving this conversation",
+        "TITLE": "Encerrar conversa",
+        "DESCRIPTION": "Preencha os atributos personalizados abaixo antes de encerrar esta conversa",
         "ACTIONS": {
-          "RESOLVE": "Resolver conversa",
+          "RESOLVE": "Encerrar conversa",
           "CANCEL": "Cancelar"
         },
         "PLACEHOLDERS": {
@@ -773,9 +773,9 @@
     "TOGGLE_MODAL": "Ver todos os atalhos",
     "TITLE": {
       "OPEN_CONVERSATION": "Abrir conversa",
-      "RESOLVE_AND_NEXT": "Resolver e passar para a próxima",
+      "RESOLVE_AND_NEXT": "Encerrar e passar para a próxima",
       "NAVIGATE_DROPDOWN": "Navegar pelos itens a seguir",
-      "RESOLVE_CONVERSATION": "Resolver conversa",
+      "RESOLVE_CONVERSATION": "Encerrar conversa",
       "GO_TO_CONVERSATION_DASHBOARD": "Ir para o painel de conversação",
       "ADD_ATTACHMENT": "Adicionar anexo",
       "GO_TO_CONTACTS_DASHBOARD": "Ir para o painel de contatos",
