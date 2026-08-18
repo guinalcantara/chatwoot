@@ -6,12 +6,7 @@ import { useI18n } from 'vue-i18n';
 const props = defineProps({
   knowledge: {
     type: Object,
-    default: () => ({
-      approved: 0,
-      suggestions: 0,
-      documents: 0,
-      coverage: 0,
-    }),
+    default: () => ({ approved: 0, pending: 0, documents: 0, coverage: 0 }),
   },
 });
 
@@ -36,10 +31,10 @@ const stats = computed(() => [
     to: linkTo('captain_assistants_responses_index'),
   },
   {
-    key: 'suggestions',
-    value: props.knowledge.suggestions,
-    label: t('CAPTAIN.OVERVIEW.KNOWLEDGE.SUGGESTIONS'),
-    to: linkTo('captain_assistants_faq_suggestions'),
+    key: 'pending',
+    value: props.knowledge.pending,
+    label: t('CAPTAIN.OVERVIEW.KNOWLEDGE.PENDING'),
+    to: linkTo('captain_assistants_responses_pending'),
   },
   {
     key: 'documents',

@@ -21,10 +21,6 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  isRetrying: {
-    type: Boolean,
-    default: false,
-  },
   isAbandoning: {
     type: Boolean,
     default: false,
@@ -35,7 +31,7 @@ const props = defineProps({
   },
 });
 
-defineEmits(['refresh', 'retry', 'abandon']);
+defineEmits(['refresh', 'abandon']);
 
 const { t } = useI18n();
 
@@ -95,22 +91,10 @@ const canAbandonImport = computed(() => isAbandonableImport(props.dataImport));
             @click="$emit('refresh')"
           />
           <Button
-            v-if="dataImport?.stalled"
-            outline
-            slate
-            size="sm"
-            icon="i-lucide-rotate-ccw"
-            :is-loading="isRetrying"
-            :disabled="isAbandoning"
-            :label="$t('DATA_IMPORTS.TABLE.RETRY')"
-            @click="$emit('retry')"
-          />
-          <Button
             v-if="canAbandonImport"
             ruby
             size="sm"
             :is-loading="isAbandoning"
-            :disabled="isRetrying"
             :label="$t('DATA_IMPORTS.TABLE.ABANDON')"
             @click="$emit('abandon')"
           />

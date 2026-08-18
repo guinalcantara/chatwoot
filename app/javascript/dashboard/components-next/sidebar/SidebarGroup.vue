@@ -55,9 +55,6 @@ const hasChildren = computed(
 const isPopoverOpen = computed(() => activePopover.value === props.name);
 const triggerRef = ref(null);
 const triggerRect = ref({ top: 0, left: 0, bottom: 0, right: 0 });
-// The sort dropdown teleports outside the popover; keep the popover open while
-// it is showing so moving the cursor onto it does not close everything.
-const isSortMenuOpen = ref(false);
 
 const openPopover = () => {
   if (triggerRef.value) {
@@ -85,7 +82,7 @@ const handleMouseEnter = () => {
 };
 
 const handleMouseLeave = () => {
-  if (!hasChildren.value || isSortMenuOpen.value) return;
+  if (!hasChildren.value) return;
   scheduleClose(200);
 };
 
@@ -94,13 +91,7 @@ const handlePopoverMouseEnter = () => {
 };
 
 const handlePopoverMouseLeave = () => {
-  if (isSortMenuOpen.value) return;
   scheduleClose(100);
-};
-
-const handleSortToggle = isOpen => {
-  isSortMenuOpen.value = isOpen;
-  cancelClose();
 };
 
 // Close popover when mouse leaves the window
@@ -108,38 +99,19 @@ const handleWindowBlur = () => {
   closeActivePopover();
 };
 
-const hasAccessibleSubChildren = child => {
-  return child.children?.some(
-    subChild => subChild.to && isAllowed(subChild.to)
-  );
-};
-
-const visibleChildren = computed(() => {
+const accessibleItems = computed(() => {
   if (!hasChildren.value) return [];
-
   return props.children.filter(child => {
-    if (child.children) return hasAccessibleSubChildren(child);
-
+    // If a item has no link, it means it's just a subgroup header
+    // So we don't need to check for permissions here, because there's nothing to
+    // access here anyway
     return child.to && isAllowed(child.to);
   });
 });
 
-const accessibleItems = computed(() => {
-  if (!hasChildren.value) return [];
-
-  return visibleChildren.value
-    .flatMap(child => child.children || child)
-    .filter(child => child.to && isAllowed(child.to));
-});
-
 const hasAccessibleChildren = computed(() => {
-  return visibleChildren.value.length > 0;
+  return accessibleItems.value.length > 0;
 });
-
-const isLastVisibleChild = child => {
-  const lastChild = visibleChildren.value[visibleChildren.value.length - 1];
-  return lastChild === child;
-};
 
 const isActive = computed(() => {
   if (props.to) {
@@ -263,10 +235,12 @@ watch(
           ref="triggerRef"
           :to="to && !hasChildren ? to : undefined"
           type="button"
-          class="flex items-center justify-center size-10 rounded-lg"
+          class="flex items-center justify-center size-10 rounded-lg transition-all"
           :class="{
-            'text-n-slate-12 bg-n-alpha-2': isActive || hasActiveChild,
-            'text-n-slate-11 hover:bg-n-alpha-2': !isActive && !hasActiveChild,
+            'bg-[#034d66] text-white dark:bg-white/20 dark:text-white':
+              isActive || hasActiveChild,
+            'text-[#5f6b72] hover:bg-[#d6ebf1] dark:text-white/70 dark:hover:bg-white/10':
+              !isActive && !hasActiveChild,
           }"
           :title="label"
           @click="hasChildren ? handleCollapsedClick() : undefined"
@@ -282,17 +256,16 @@ watch(
           @close="closePopover"
           @mouseenter="handlePopoverMouseEnter"
           @mouseleave="handlePopoverMouseLeave"
-          @sort-toggle="handleSortToggle"
         />
       </div>
     </template>
     <!-- Expanded State -->
     <template v-else>
       <SidebarGroupHeader
-        :icon
-        :name
-        :label
-        :to
+        :icon="icon"
+        :name="name"
+        :label="label"
+        :to="to"
         :getter-keys="getterKeys"
         :is-active="isActive"
         :has-active-child="hasActiveChild"
@@ -303,23 +276,16 @@ watch(
       <ul
         v-if="hasChildren"
         v-show="isExpanded || hasActiveChild"
-        class="grid m-0 list-none min-w-0"
+        class="grid m-0 list-none sidebar-group-children min-w-0"
       >
-        <template v-for="child in visibleChildren" :key="child.name">
+        <template v-for="child in children" :key="child.name">
           <SidebarSubGroup
             v-if="child.children"
-            :name="`${name}:${child.name}`"
             :label="child.label"
             :icon="child.icon"
             :children="child.children"
-            :collapsible="child.collapsible"
-            :show-tree-line="child.showTreeLine"
-            :end-tree-line="child.showTreeLine && isLastVisibleChild(child)"
             :is-expanded="isExpanded"
             :active-child="activeChild"
-            :sort-options="child.sortOptions"
-            :active-sort="child.activeSort"
-            @update-sort="child.onSortChange"
           />
           <SidebarGroupLeaf
             v-else-if="isAllowed(child.to)"
@@ -335,3 +301,63 @@ watch(
     </template>
   </Policy>
 </template>
+
+<style>
+.sidebar-group-children .child-item::before {
+  content: '';
+  position: absolute;
+  width: 0.125rem;
+  /* 0.5px */
+  height: 100%;
+  background-color: #ff914d;
+  opacity: 0.3;
+}
+
+.sidebar-group-children .child-item:first-child::before {
+  border-radius: 4px 4px 0 0;
+}
+
+/* This selects the last child in a group */
+/* https://codepen.io/scmmishra/pen/yLmKNLW */
+.sidebar-group-children > .child-item:last-child::before,
+.sidebar-group-children
+  > *:last-child
+  > *:last-child
+  > .child-item:last-child::before {
+  height: 20%;
+}
+
+.sidebar-group-children > .child-item:last-child::after,
+.sidebar-group-children
+  > *:last-child
+  > *:last-child
+  > .child-item:last-child::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 12px;
+  bottom: calc(50% - 2px);
+  border-bottom-width: 0.125rem;
+  border-left-width: 0.125rem;
+  border-right-width: 0px;
+  border-top-width: 0px;
+  border-radius: 0 0 0 4px;
+  left: 0;
+  border-color: #ff914d;
+  opacity: 0.4;
+}
+
+#app[dir='rtl'] .sidebar-group-children > .child-item:last-child::after,
+#app[dir='rtl']
+  .sidebar-group-children
+  > *:last-child
+  > *:last-child
+  > .child-item:last-child::after {
+  right: 0;
+  border-bottom-width: 0.125rem;
+  border-right-width: 0.125rem;
+  border-left-width: 0px;
+  border-top-width: 0px;
+  border-radius: 0 0 4px 0px;
+}
+</style>

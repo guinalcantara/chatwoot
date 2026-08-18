@@ -47,12 +47,7 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
   end
 
   def faq_stats
-    builder = Captain::AssistantStatsBuilder.new(
-      @assistant,
-      suggestions_scope: Captain::FaqSuggestionFinder.new(Current.user, Current.account).perform
-    )
-
-    render json: builder.faq_stats
+    render json: Captain::AssistantStatsBuilder.new(@assistant).faq_stats
   end
 
   def summary

@@ -5,7 +5,6 @@ import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
 import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
-import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
 
 const props = defineProps({
   // Null while a fetch is in flight so stale counts are never shown.
@@ -118,16 +117,10 @@ const moreFiltersSections = computed(() => [
   },
 ]);
 
-const selectedAssignee = computed(
-  () => props.agents.find(agent => agent.id === assigneeId.value) || null
-);
-
 const selectedAssigneeLabel = computed(
-  () => selectedAssignee.value?.name || t('CALLS_PAGE.FILTERS.ASSIGNEE')
-);
-
-const isOtherActivitySelected = computed(() =>
-  OTHER_ACTIVITIES.includes(activity.value)
+  () =>
+    props.agents.find(agent => agent.id === assigneeId.value)?.name ||
+    t('CALLS_PAGE.FILTERS.ASSIGNEE')
 );
 
 const hasMoreFilters = computed(() => Boolean(inboxId.value));
@@ -150,7 +143,7 @@ const applyMoreFilter = ({ action, value }) => {
 
 <template>
   <div class="flex flex-wrap items-center justify-between gap-3">
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="flex flex-wrap items-center gap-3">
       <span v-if="!activity" class="text-heading-3 text-n-slate-11 shrink-0">
         {{
           totalCount === null
@@ -164,13 +157,13 @@ const applyMoreFilter = ({ action, value }) => {
         color="blue"
         size="sm"
         :icon="ACTIVITY_ICONS[activity]"
-        class="shrink-0 !h-7 !px-2"
+        class="shrink-0"
         @click="setActivity(null)"
       >
         {{ activeChipLabel }}
         <Icon icon="i-lucide-x" />
       </Button>
-      <div class="w-px h-3.5 mx-1 bg-n-strong shrink-0" />
+      <div class="w-px h-4 bg-n-strong shrink-0" />
       <Button
         v-for="chip in inactiveChips"
         :key="chip"
@@ -179,7 +172,7 @@ const applyMoreFilter = ({ action, value }) => {
         size="sm"
         :icon="ACTIVITY_ICONS[chip]"
         :label="activityLabel(chip)"
-        class="shrink-0 text-n-slate-11 !h-7 !px-2"
+        class="shrink-0 text-n-slate-12"
         @click="setActivity(chip)"
       />
       <OnClickOutside
@@ -191,10 +184,7 @@ const applyMoreFilter = ({ action, value }) => {
           color="slate"
           size="sm"
           icon="i-lucide-phone"
-          class="!h-7 !px-2"
-          :class="
-            isOtherActivitySelected ? 'text-n-slate-12' : 'text-n-slate-11'
-          "
+          class="text-n-slate-12"
           @click="toggleMenu('activity')"
         >
           {{ t('CALLS_PAGE.FILTERS.OTHER_ACTIVITY') }}
@@ -218,19 +208,10 @@ const applyMoreFilter = ({ action, value }) => {
           variant="outline"
           color="slate"
           size="sm"
-          icon="i-woot-empty-assignee"
-          class="max-w-52 !h-7 !px-2"
-          :class="assigneeId ? 'text-n-slate-12' : 'text-n-slate-11'"
+          icon="i-lucide-user-round-cog"
+          class="max-w-52 text-n-slate-12"
           @click="toggleMenu('assignee')"
         >
-          <template v-if="selectedAssignee" #icon>
-            <Avatar
-              :src="selectedAssignee.thumbnail"
-              :name="selectedAssignee.name"
-              :size="16"
-              rounded-full
-            />
-          </template>
           <span class="truncate">{{ selectedAssigneeLabel }}</span>
           <Icon icon="i-lucide-chevron-down" class="text-n-slate-11 shrink-0" />
         </Button>
@@ -247,9 +228,8 @@ const applyMoreFilter = ({ action, value }) => {
           variant="outline"
           size="sm"
           icon="i-lucide-list-filter"
-          class="!h-7 !px-2"
           :color="hasMoreFilters ? 'blue' : 'slate'"
-          :class="hasMoreFilters ? '' : 'text-n-slate-11'"
+          :class="hasMoreFilters ? '' : 'text-n-slate-12'"
           @click="toggleMenu('more')"
         >
           {{ t('CALLS_PAGE.FILTERS.MORE_FILTERS') }}
