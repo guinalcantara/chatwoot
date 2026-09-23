@@ -104,6 +104,7 @@
       "SEND_EMAIL_TRANSCRIPT": "Enviar uma transcrição por e-mail",
       "MUTE_CONVERSATION": "Silenciar Conversa",
       "SNOOZE_CONVERSATION": "Adiar Conversa",
+      "CHANGE_STATUS": "Alterar Status",
       "RESOLVE_CONVERSATION": "Encerrar conversa",
       "SEND_ATTACHMENT": "Enviar Anexo",
       "SEND_MESSAGE": "Enviar uma Mensagem",
