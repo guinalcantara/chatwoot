@@ -10,6 +10,7 @@ defineProps({
   voiceCallDirection: { type: String, default: '' },
   unreadCount: { type: Number, default: 0 },
   showExpandedPreview: { type: Boolean, default: false },
+  showUnreadBadge: { type: Boolean, default: true },
 });
 </script>
 
@@ -42,6 +43,10 @@ defineProps({
       {{ $t(`CHAT_LIST.NO_MESSAGES`) }}
     </span>
 
-    <UnreadBadge :count="unreadCount" :align-bottom="showExpandedPreview" />
+    <UnreadBadge
+      v-if="showUnreadBadge"
+      :count="unreadCount"
+      :align-bottom="showExpandedPreview"
+    />
   </div>
 </template>

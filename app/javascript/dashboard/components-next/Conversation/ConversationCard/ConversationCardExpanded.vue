@@ -7,7 +7,7 @@ import CardLabels from './CardLabelsV5.vue';
 import CardPriorityIcon from './CardPriorityIcon.vue';
 import InboxName from 'dashboard/components-next/Conversation/InboxName.vue';
 import Avatar from 'next/avatar/Avatar.vue';
-import TimeAgo from 'dashboard/components/ui/TimeAgo.vue';
+import ConversationTimestamp from './ConversationTimestamp.vue';
 import SLACardLabel from 'dashboard/components-next/Conversation/Sla/SLACardLabel.vue';
 import CardStatusIcon from './CardStatusIcon.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
@@ -164,6 +164,7 @@ const selectedModel = computed({
         :voice-call-direction="voiceCallData.direction"
         :unread-count="unreadCount"
         :show-expanded-preview="false"
+        :show-unread-badge="false"
       />
     </div>
 
@@ -181,12 +182,12 @@ const selectedModel = computed({
         <SLACardLabel ref="slaCardLabel" :chat="chat" />
       </div>
 
-      <div class="flex-shrink-0 w-[4.375rem] text-end">
-        <TimeAgo
+      <div class="min-w-[7.5rem] flex-shrink-0 text-end">
+        <ConversationTimestamp
           :conversation-id="chat.id"
-          :last-activity-timestamp="chat.timestamp"
           :created-at-timestamp="chat.created_at"
-          class="font-440 !text-xs text-n-slate-11"
+          :last-message-timestamp="chat.last_message_at"
+          :unread-count="unreadCount"
         />
       </div>
     </div>
