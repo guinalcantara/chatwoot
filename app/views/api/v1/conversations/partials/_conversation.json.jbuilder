@@ -33,9 +33,10 @@ json.id conversation.display_id
 # but add an id tiebreaker: without it, same-second siblings (e.g. the input_csat survey
 # created alongside activity messages during an auto-resolve burst) could resolve to a
 # lower-id activity, and backward pagination would then never load the higher-id survey.
-last_message = conversation.messages.where(account_id: conversation.account_id)
-                           .includes([{ attachments: [{ file_attachment: [:blob] }] }])
-                           .reorder(created_at: :desc, id: :desc).first
+account_messages = conversation.messages.where(account_id: conversation.account_id)
+last_message = account_messages
+               .includes([{ attachments: [{ file_attachment: [:blob] }] }])
+               .reorder(created_at: :desc, id: :desc).first
 if last_message.blank?
   json.messages []
 else
@@ -66,7 +67,15 @@ json.updated_at conversation.updated_at.to_f
 json.timestamp conversation.last_activity_at.to_i
 json.first_reply_created_at conversation.first_reply_created_at.to_i
 json.unread_count conversation.unread_incoming_messages.count
-json.last_non_activity_message conversation.messages.where(account_id: conversation.account_id).non_activity_messages.first.try(:push_event_data)
+last_non_activity_message = account_messages.non_activity_messages.first
+json.last_non_activity_message last_non_activity_message.try(:push_event_data)
+
+last_message_at = if last_non_activity_message&.private?
+                    account_messages.chat.reorder(created_at: :desc, id: :desc).pick(:created_at)
+                  else
+                    last_non_activity_message&.created_at
+                  end
+json.last_message_at last_message_at&.to_i
 json.last_activity_at conversation.last_activity_at.to_i
 json.priority conversation.priority
 json.waiting_since conversation.waiting_since.to_i.to_i
