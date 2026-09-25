@@ -1,6 +1,8 @@
 <script setup>
 import {
   computed,
+  nextTick,
+  onBeforeUnmount,
   onMounted,
   useTemplateRef,
   ref,
@@ -27,9 +29,12 @@ defineOptions({
   inheritAttrs: false,
 });
 
-const timeStampURL = computed(() => {
-  return timeStampAppendedURL(attachment.dataUrl);
-});
+const MAX_AUDIO_LOAD_RETRIES = 3;
+const AUDIO_LOAD_RETRY_DELAY = 500;
+
+const timeStampURL = ref(timeStampAppendedURL(attachment.dataUrl));
+const audioLoadRetryCount = ref(0);
+let audioLoadRetryTimeout;
 
 const TRANSCRIPT_PREVIEW_LENGTH = 200;
 const isTranscriptExpanded = ref(false);
@@ -73,6 +78,9 @@ const resolveStreamingDuration = () => {
 };
 
 const onLoadedMetadata = () => {
+  clearTimeout(audioLoadRetryTimeout);
+  audioLoadRetryCount.value = 0;
+
   const d = audioPlayer.value?.duration;
   if (!Number.isFinite(d)) {
     resolveStreamingDuration();
@@ -80,6 +88,22 @@ const onLoadedMetadata = () => {
   }
   duration.value = d;
 };
+
+const onAudioLoadError = () => {
+  if (audioLoadRetryCount.value >= MAX_AUDIO_LOAD_RETRIES) return;
+
+  audioLoadRetryCount.value += 1;
+  clearTimeout(audioLoadRetryTimeout);
+  audioLoadRetryTimeout = setTimeout(async () => {
+    timeStampURL.value = timeStampAppendedURL(attachment.dataUrl);
+    await nextTick();
+    audioPlayer.value?.load();
+  }, AUDIO_LOAD_RETRY_DELAY * audioLoadRetryCount.value);
+};
+
+onBeforeUnmount(() => {
+  clearTimeout(audioLoadRetryTimeout);
+});
 
 const playbackSpeedLabel = computed(() => {
   return `${playbackSpeed.value}x`;
@@ -168,6 +192,7 @@ const downloadAudio = async () => {
     class="hidden"
     playsinline
     @loadedmetadata="onLoadedMetadata"
+    @error="onAudioLoadError"
     @timeupdate="onTimeUpdate"
     @ended="onEnd"
   >
