@@ -192,11 +192,10 @@ const downloadAudio = async () => {
     class="hidden"
     playsinline
     @loadedmetadata="onLoadedMetadata"
-    @error="onAudioLoadError"
     @timeupdate="onTimeUpdate"
     @ended="onEnd"
   >
-    <source :src="timeStampURL" />
+    <source :src="timeStampURL" @error="onAudioLoadError" />
   </audio>
   <div
     v-bind="$attrs"
