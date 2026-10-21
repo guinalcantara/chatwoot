@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-10-20
+goal: Definir e implementar a edição de mensagens respeitando as capacidades de
+  cada provedor

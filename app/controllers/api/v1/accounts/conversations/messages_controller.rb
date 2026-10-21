@@ -14,6 +14,8 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def update
+    return update_content if permitted_params[:content].present?
+
     Messages::StatusUpdateService.new(message, permitted_params[:status], permitted_params[:external_error]).perform
     @message = message
   end
@@ -87,7 +89,21 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def permitted_params
-    params.permit(:id, :target_language, :status, :external_error)
+    params.permit(:id, :target_language, :status, :external_error, :content)
+  end
+
+  def update_content
+    message.with_lock do
+      validate_editable_message!
+      message.update!(content: permitted_params[:content], content_attributes: message.content_attributes.merge(edited: true))
+    end
+    @message = message
+  end
+
+  def validate_editable_message!
+    raise ArgumentError, 'Message cannot be edited' unless message.outgoing? && !message.private? && message.text?
+    raise ArgumentError, 'Message cannot be edited' unless message.attachments.empty? && message.source_id.present?
+    raise ArgumentError, 'Message cannot be edited' unless message.sender == Current.user && message.created_at > 15.minutes.ago
   end
 
   def already_translated_content_available?
