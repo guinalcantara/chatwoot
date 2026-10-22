@@ -2,6 +2,33 @@ import { mutations } from '../index';
 import types from '../../../mutation-types';
 
 describe('#mutations', () => {
+  describe('#ADD_MESSAGE', () => {
+    it('replaces edited message content without adding a second message', () => {
+      const state = {
+        allConversations: [
+          {
+            id: 1,
+            messages: [{ id: 2, conversation_id: 1, content: 'Before' }],
+          },
+        ],
+        selectedChatId: 1,
+      };
+
+      mutations[types.ADD_MESSAGE](state, {
+        id: 2,
+        conversation_id: 1,
+        content: 'After',
+        content_attributes: { edited: true },
+      });
+
+      expect(state.allConversations[0].messages).toHaveLength(1);
+      expect(state.allConversations[0].messages[0].content).toBe('After');
+      expect(
+        state.allConversations[0].messages[0].content_attributes.edited
+      ).toBe(true);
+    });
+  });
+
   describe('#UPDATE_MESSAGE_CALL_STATUS', () => {
     it('does nothing if conversation is not found', () => {
       const state = { allConversations: [] };

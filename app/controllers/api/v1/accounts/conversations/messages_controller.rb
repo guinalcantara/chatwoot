@@ -14,7 +14,8 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def update
-    return update_content if permitted_params[:content].present?
+    return update_content if params.key?(:content)
+    return update_edit_error if params.key?(:edit_error)
 
     Messages::StatusUpdateService.new(message, permitted_params[:status], permitted_params[:external_error]).perform
     @message = message
@@ -89,21 +90,49 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def permitted_params
-    params.permit(:id, :target_language, :status, :external_error, :content)
+    params.permit(:id, :target_language, :status, :external_error, :content, :edit_error)
+  end
+
+  def update_edit_error
+    return render_could_not_create_error('Message editing is not supported by this inbox') unless editing_supported?
+
+    error = permitted_params[:edit_error]
+    return render_could_not_create_error('Edit error must be a short string') unless error.is_a?(String) && error.length <= 500
+
+    message.update!(content_attributes: message.content_attributes.merge(edit_error: error))
+    @message = message
   end
 
   def update_content
+    content = permitted_params[:content]
+    return render_could_not_create_error('Content must be a non-empty string') unless content.is_a?(String) && content.strip.present?
+    return render_could_not_create_error('Message editing is not supported by this inbox') unless editing_supported?
+
     message.with_lock do
-      validate_editable_message!
-      message.update!(content: permitted_params[:content], content_attributes: message.content_attributes.merge(edited: true))
+      return render_could_not_create_error('Message cannot be edited') unless editable_message?
+      return render_could_not_create_error('Content is unchanged') if message.content == content
+
+      message.update!(content: content, content_attributes: message.content_attributes.merge(edited: true, edit_request_id: SecureRandom.uuid,
+                                                                                             edit_error: nil))
     end
     @message = message
   end
 
-  def validate_editable_message!
-    raise ArgumentError, 'Message cannot be edited' unless message.outgoing? && !message.private? && message.text?
-    raise ArgumentError, 'Message cannot be edited' unless message.attachments.empty? && message.source_id.present?
-    raise ArgumentError, 'Message cannot be edited' unless message.sender == Current.user && message.created_at > 15.minutes.ago
+  def editing_supported?
+    @conversation.inbox.channel.supports_message_editing?
+  end
+
+  def editable_message?
+    editable_message_type? && editable_message_origin?
+  end
+
+  def editable_message_type?
+    [message.outgoing?, !message.private?, message.text?, message.attachments.empty?, !message.failed?,
+     message.additional_attributes['template_params'].blank?, message.additional_attributes['campaign_id'].blank?].all?
+  end
+
+  def editable_message_origin?
+    message.source_id.present? && message.sender == Current.user && message.created_at > 15.minutes.ago
   end
 
   def already_translated_content_available?
@@ -112,8 +141,10 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
 
   # API inbox check
   def ensure_api_inbox
-    # Only API inboxes can update messages
-    render json: { error: 'Message status update is only allowed for API inboxes' }, status: :forbidden unless @conversation.inbox.api?
+    return if @conversation.inbox.api?
+    return render_could_not_create_error('Message editing is not supported by this inbox') if params.key?(:content)
+
+    render json: { error: 'Message status update is only allowed for API inboxes' }, status: :forbidden
   end
 end
 

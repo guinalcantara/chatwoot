@@ -3,6 +3,20 @@
 require 'rails_helper'
 
 RSpec.describe Channel::Api do
+  describe '#supports_message_editing?' do
+    it 'recognizes the native Evolution webhook' do
+      channel = build(:channel_api, webhook_url: 'https://evolution.example.com/chatwoot/webhook/instance-1')
+
+      expect(channel.supports_message_editing?).to be true
+    end
+
+    it 'rejects a generic API webhook' do
+      channel = build(:channel_api, webhook_url: 'https://example.com/webhook')
+
+      expect(channel.supports_message_editing?).to be false
+    end
+  end
+
   # This validation happens in ApplicationRecord
   describe 'length validations' do
     let(:channel_api) { create(:channel_api) }

@@ -55,6 +55,12 @@ const handleSeeOriginal = () => {
         {{ $t('CONVERSATION.NO_CONTENT') }}
       </span>
       <FormattedContent v-if="renderContent" :content="renderContent" />
+      <span v-if="contentAttributes?.edited" class="text-xs text-n-slate-11">
+        {{ $t('CONVERSATION.CONTEXT_MENU.EDITED') }}
+      </span>
+      <span v-if="contentAttributes?.editError" class="text-xs text-n-ruby-11">
+        {{ $t('CONVERSATION.CONTEXT_MENU.EDIT_FAILED') }}
+      </span>
       <span
         v-if="contactInfoRequestState === 'pending'"
         class="text-xs font-medium text-n-slate-11"

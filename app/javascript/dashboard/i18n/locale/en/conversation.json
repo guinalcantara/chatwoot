@@ -363,6 +363,10 @@
       "ASSIGN": "Assign"
     },
     "CONTEXT_MENU": {
+      "EDIT": "Edit message",
+      "SAVE_EDIT": "Save changes",
+      "EDITED": "Edited",
+      "EDIT_FAILED": "Could not update this message on WhatsApp",
       "COPY": "Copy",
       "REPLY_TO": "Reply to this message",
       "DELETE": "Delete",
