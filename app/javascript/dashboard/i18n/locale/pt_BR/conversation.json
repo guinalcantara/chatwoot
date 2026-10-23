@@ -350,6 +350,10 @@
       "ASSIGN": "Atribuir"
     },
     "CONTEXT_MENU": {
+      "EDIT": "Editar mensagem",
+      "SAVE_EDIT": "Salvar alterações",
+      "EDITED": "Editada",
+      "EDIT_FAILED": "Não foi possível editar esta mensagem no WhatsApp",
       "COPY": "Copiar",
       "REPLY_TO": "Responder mensagem",
       "DELETE": "Excluir",

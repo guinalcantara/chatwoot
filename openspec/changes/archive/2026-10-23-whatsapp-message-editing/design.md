@@ -37,9 +37,15 @@ O Chatwoot atualizará o conteúdo e disparará `message.updated`; a integraçã
 
 `Whatsapp::Providers::WhatsappCloudService` não ganhará chamada de edição porque a Cloud API oficial não possui essa operação. A alternativa de usar um endpoint não documentado comprometeria a integração oficial e não é aceitável.
 
+### Localização da experiência de edição
+
+Os textos da interface usam as chaves i18n do dashboard. As rejeições da API usam `I18n.t` e a localidade existente do usuário ou da conta. A tradução `pt_BR` será adicionada explicitamente para esta funcionalidade porque ela é necessária no ambiente solicitado, além do inglês-base.
+
 ### Evolução da integração nativa da Evolution
 
 A Evolution já possui o serviço Baileys e o mapeamento entre a chave WhatsApp e a mensagem do Chatwoot. O tratamento de `messages.edit` e `send.message.update` será corrigido para atualizar a mensagem vinculada em vez de criar o texto adicional “Mensagem editada”. Não será adicionado provider, URL, API key ou `instanceName` à inbox do Chatwoot.
+
+Na edição, a Evolution consultará o texto da mensagem WhatsApp originalmente mapeada para preservar a presença e o nome da assinatura que foram enviados. A configuração atual de assinatura não deve adicionar assinatura a uma mensagem originalmente sem ela nem remover uma assinatura anterior.
 
 ## Risks / Trade-offs
 

@@ -1,8 +1,10 @@
+# whatsapp-message-editing Specification
+
 ## Purpose
 
 Permitir que agentes corrijam mensagens recentes em provedores WhatsApp compatíveis sem exibir capacidades que a integração oficial não suporta.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Elegibilidade de edição de mensagem WhatsApp
 
@@ -37,6 +39,16 @@ O sistema SHALL atualizar localmente uma mensagem elegível e emitir o evento de
 - **WHEN** a Evolution não consegue editar a mensagem no WhatsApp
 - **THEN** a integração registra e comunica a falha sem criar uma nova mensagem no Chatwoot ou reverter automaticamente o conteúdo local
 
+#### Scenario: Assinatura original preservada na edição
+
+- **WHEN** um agente edita uma mensagem que foi enviada ao WhatsApp com assinatura
+- **THEN** a Evolution mantém a assinatura e o nome presentes na mensagem original ao substituir o texto
+
+#### Scenario: Mensagem originalmente sem assinatura
+
+- **WHEN** um agente edita uma mensagem enviada ao WhatsApp sem assinatura
+- **THEN** a Evolution não acrescenta assinatura, mesmo se a configuração atual da inbox estiver ativada
+
 ### Requirement: Restrição da WhatsApp Cloud API oficial
 
 O sistema MUST tratar inboxes `whatsapp_cloud` como não compatíveis com edição de mensagens, pois a Cloud API oficial da Meta não oferece essa operação.
@@ -50,3 +62,17 @@ O sistema MUST tratar inboxes `whatsapp_cloud` como não compatíveis com ediç�
 
 - **WHEN** um cliente chama a operação de edição para uma mensagem de uma inbox WhatsApp Cloud API
 - **THEN** o sistema responde que o provedor não suporta edição e não altera a mensagem
+
+### Requirement: Localização dos textos de edição
+
+O sistema SHALL apresentar a ação, o editor, o estado de edição e os erros de edição no idioma selecionado pelo usuário ou pela conta. O sistema MUST disponibilizar traduções em português brasileiro para os textos desta funcionalidade.
+
+#### Scenario: Interface em português brasileiro
+
+- **WHEN** um agente com idioma `pt_BR` abre a ação de edição ou visualiza seu resultado
+- **THEN** os textos da interface de edição aparecem em português brasileiro
+
+#### Scenario: Erro de edição em português brasileiro
+
+- **WHEN** uma solicitação de edição inválida é feita com localidade `pt_BR`
+- **THEN** a API retorna a mensagem de erro traduzida em português brasileiro

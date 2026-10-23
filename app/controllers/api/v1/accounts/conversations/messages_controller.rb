@@ -94,10 +94,10 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def update_edit_error
-    return render_could_not_create_error('Message editing is not supported by this inbox') unless editing_supported?
+    return render_could_not_create_error(I18n.t('conversations.messages.editing.unsupported')) unless editing_supported?
 
     error = permitted_params[:edit_error]
-    return render_could_not_create_error('Edit error must be a short string') unless error.is_a?(String) && error.length <= 500
+    return render_could_not_create_error(I18n.t('conversations.messages.editing.invalid_error')) unless error.is_a?(String) && error.length <= 500
 
     message.update!(content_attributes: message.content_attributes.merge(edit_error: error))
     @message = message
@@ -105,12 +105,14 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
 
   def update_content
     content = permitted_params[:content]
-    return render_could_not_create_error('Content must be a non-empty string') unless content.is_a?(String) && content.strip.present?
-    return render_could_not_create_error('Message editing is not supported by this inbox') unless editing_supported?
+    unless content.is_a?(String) && content.strip.present?
+      return render_could_not_create_error(I18n.t('conversations.messages.editing.invalid_content'))
+    end
+    return render_could_not_create_error(I18n.t('conversations.messages.editing.unsupported')) unless editing_supported?
 
     message.with_lock do
-      return render_could_not_create_error('Message cannot be edited') unless editable_message?
-      return render_could_not_create_error('Content is unchanged') if message.content == content
+      return render_could_not_create_error(I18n.t('conversations.messages.editing.not_editable')) unless editable_message?
+      return render_could_not_create_error(I18n.t('conversations.messages.editing.unchanged')) if message.content == content
 
       message.update!(content: content, content_attributes: message.content_attributes.merge(edited: true, edit_request_id: SecureRandom.uuid,
                                                                                              edit_error: nil))
@@ -142,7 +144,7 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   # API inbox check
   def ensure_api_inbox
     return if @conversation.inbox.api?
-    return render_could_not_create_error('Message editing is not supported by this inbox') if params.key?(:content)
+    return render_could_not_create_error(I18n.t('conversations.messages.editing.unsupported')) if params.key?(:content)
 
     render json: { error: 'Message status update is only allowed for API inboxes' }, status: :forbidden
   end
