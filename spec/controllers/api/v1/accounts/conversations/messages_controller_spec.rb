@@ -334,6 +334,93 @@ RSpec.describe 'Conversation Messages API', type: :request do
     end
 
     context 'when authenticated agent' do
+      context 'when editing content' do
+        let(:api_channel) { create(:channel_api, account: account, webhook_url: 'https://evolution.example.com/chatwoot/webhook/instance-1') }
+        let(:message) do
+          create(:message, conversation: conversation, account: account, sender: agent, message_type: :outgoing,
+                           source_id: 'wa-message-id', status: :sent)
+        end
+
+        before { create(:inbox_member, inbox: api_inbox, user: agent) }
+
+        it 'updates an eligible message and marks it as edited' do
+          patch api_v1_account_conversation_message_url(account_id: account.id, conversation_id: conversation.display_id, id: message.id),
+                params: { content: 'Corrected text' }, headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(message.reload.content).to eq('Corrected text')
+          expect(message.content_attributes['edited']).to be true
+        end
+
+        it 'rejects a message outside the editing window' do
+          message.update!(created_at: 15.minutes.ago)
+
+          patch api_v1_account_conversation_message_url(account_id: account.id, conversation_id: conversation.display_id, id: message.id),
+                params: { content: 'Corrected text' }, headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(message.reload.content).not_to eq('Corrected text')
+        end
+
+        it 'rejects a generic API inbox' do
+          api_channel.update!(webhook_url: 'https://example.com/webhook')
+
+          patch api_v1_account_conversation_message_url(account_id: account.id, conversation_id: conversation.display_id, id: message.id),
+                params: { content: 'Corrected text' }, headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(message.reload.content).not_to eq('Corrected text')
+        end
+
+        it 'rejects messages from another sender' do
+          message.update!(sender: create(:user, account: account))
+
+          patch api_v1_account_conversation_message_url(account_id: account.id, conversation_id: conversation.display_id, id: message.id),
+                params: { content: 'Corrected text' }, headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(message.reload.content).not_to eq('Corrected text')
+        end
+
+        it 'rejects blank content' do
+          patch api_v1_account_conversation_message_url(account_id: account.id, conversation_id: conversation.display_id, id: message.id),
+                params: { content: '  ' }, headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(message.reload.content).not_to eq('  ')
+        end
+
+        it 'rejects messages without an external identifier' do
+          message.update!(source_id: nil)
+
+          patch api_v1_account_conversation_message_url(account_id: account.id, conversation_id: conversation.display_id, id: message.id),
+                params: { content: 'Corrected text' }, headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(message.reload.content).not_to eq('Corrected text')
+        end
+
+        it 'rejects campaign messages' do
+          message.update!(additional_attributes: { campaign_id: 12 })
+
+          patch api_v1_account_conversation_message_url(account_id: account.id, conversation_id: conversation.display_id, id: message.id),
+                params: { content: 'Corrected text' }, headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(message.reload.content).not_to eq('Corrected text')
+        end
+
+        it 'records a remote edit failure without changing the message status or content' do
+          patch api_v1_account_conversation_message_url(account_id: account.id, conversation_id: conversation.display_id, id: message.id),
+                params: { edit_error: 'WhatsApp rejected the message edit' }, headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(message.reload.content_attributes['edit_error']).to eq('WhatsApp rejected the message edit')
+          expect(message.status).to eq('sent')
+          expect(message.content).to eq('Incoming Message')
+        end
+      end
+
       context 'when agent has non-API inbox' do
         let(:inbox) { create(:inbox, account: account) }
         let(:agent) { create(:user, account: account, role: :agent) }
@@ -348,6 +435,23 @@ RSpec.describe 'Conversation Messages API', type: :request do
             id: message.id
           ), params: { status: 'failed', external_error: 'err' }, headers: agent.create_new_auth_token, as: :json
           expect(response).to have_http_status(:forbidden)
+        end
+
+        it 'does not edit a WhatsApp Cloud message' do
+          cloud_channel = create(:channel_whatsapp, account: account, provider: 'whatsapp_cloud',
+                                                    validate_provider_config: false, sync_templates: false)
+          cloud_inbox = create(:inbox, channel: cloud_channel, account: account)
+          cloud_conversation = create(:conversation, inbox: cloud_inbox, account: account)
+          cloud_message = create(:message, conversation: cloud_conversation, account: account, sender: agent,
+                                           message_type: :outgoing, source_id: 'wa-message-id')
+          create(:inbox_member, inbox: cloud_inbox, user: agent)
+
+          patch api_v1_account_conversation_message_url(account_id: account.id, conversation_id: cloud_conversation.display_id,
+                                                        id: cloud_message.id),
+                params: { content: 'Corrected text' }, headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(cloud_message.reload.content).not_to eq('Corrected text')
         end
       end
 

@@ -15,6 +15,34 @@ describe WebhookListener do
   let!(:conversation_created_event) { Events::Base.new(event_name, Time.zone.now, conversation: conversation) }
   let!(:contact_event) { Events::Base.new(event_name, Time.zone.now, contact: contact) }
 
+  describe '#message_updated' do
+    let(:event_name) { :'message.updated' }
+
+    it 'includes whether message content changed in the webhook payload' do
+      webhook = create(:webhook, inbox: inbox, account: account, subscriptions: ['message_updated'])
+      event = Events::Base.new(event_name, Time.zone.now, message: message, previous_changes: { 'content' => ['before', 'after'] })
+
+      expect(WebhookJob).to receive(:perform_later).with(
+        webhook.url, message.webhook_data.merge(event: 'message_updated', content_changed: true), :account_webhook,
+        secret: webhook.secret, delivery_id: instance_of(String)
+      ).once
+
+      listener.message_updated(event)
+    end
+
+    it 'does not flag a status-only update as a content edit' do
+      webhook = create(:webhook, inbox: inbox, account: account, subscriptions: ['message_updated'])
+      event = Events::Base.new(event_name, Time.zone.now, message: message, previous_changes: { 'status' => ['sent', 'read'] })
+
+      expect(WebhookJob).to receive(:perform_later).with(
+        webhook.url, message.webhook_data.merge(event: 'message_updated', content_changed: false), :account_webhook,
+        secret: webhook.secret, delivery_id: instance_of(String)
+      ).once
+
+      listener.message_updated(event)
+    end
+  end
+
   describe '#message_created' do
     let(:event_name) { :'message.created' }
 

@@ -35,6 +35,12 @@ class Channel::Api < ApplicationRecord
     'API'
   end
 
+  def supports_message_editing?
+    webhook_url.present? && URI.parse(webhook_url).path.match?(%r{\A/chatwoot/webhook/[^/]+/?\z})
+  rescue URI::InvalidURIError
+    false
+  end
+
   private
 
   def ensure_valid_agent_reply_time_window

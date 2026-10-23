@@ -282,6 +282,12 @@ pt_BR:
     captain:
       handoff: 'Transferindo para que outro agente dê assistência.'
     messages:
+      editing:
+        unsupported: 'A edição de mensagens não é compatível com esta caixa de entrada'
+        invalid_error: 'O erro de edição deve ser um texto curto'
+        invalid_content: 'O conteúdo deve ser um texto não vazio'
+        not_editable: 'Esta mensagem não pode ser editada'
+        unchanged: 'O conteúdo não foi alterado'
       instagram_story_content: '%{story_sender} mencionou você na conversa: '
       instagram_deleted_story_content: Este Story não está mais disponível.
       instagram_shared_story_content: 'Story compartilhado'

@@ -39,6 +39,7 @@ class WebhookListener < BaseListener
     return unless message.webhook_sendable?
 
     payload = message.webhook_data.merge(event: __method__.to_s)
+    payload[:content_changed] = event.data[:previous_changes]&.key?('content') || false
     deliver_webhook_payloads(payload, inbox)
   end
 

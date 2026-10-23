@@ -16,6 +16,7 @@ import MenuItem from '../../../components/widgets/conversation/contextMenu/menuI
 import { useTrack } from 'dashboard/composables';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import ReportCaptainMessageDialog from './ReportCaptainMessageDialog.vue';
+import MessageApi from 'dashboard/api/inbox/message';
 
 export default {
   components: {
@@ -59,6 +60,9 @@ export default {
     return {
       isCannedResponseModalOpen: false,
       showDeleteModal: false,
+      showEditModal: false,
+      editedContent: '',
+      isSavingEdit: false,
     };
   },
   computed: {
@@ -144,6 +148,34 @@ export default {
       this.handleClose();
       this.showDeleteModal = true;
     },
+    openEditModal() {
+      this.editedContent = this.message.content;
+      this.handleClose();
+      this.showEditModal = true;
+    },
+    async saveEdit() {
+      if (
+        !this.editedContent.trim() ||
+        this.editedContent === this.message.content ||
+        this.isSavingEdit
+      )
+        return;
+
+      this.isSavingEdit = true;
+      try {
+        const { data } = await MessageApi.edit(
+          this.conversationId,
+          this.messageId,
+          this.editedContent
+        );
+        this.$store.dispatch('updateMessage', data);
+        this.showEditModal = false;
+      } catch (error) {
+        useAlert(parseAPIErrorResponse(error));
+      } finally {
+        this.isSavingEdit = false;
+      }
+    },
     async confirmDeletion() {
       try {
         await this.$store.dispatch('deleteMessage', {
@@ -181,6 +213,35 @@ export default {
       />
     </woot-modal>
     <!-- Confirm Deletion -->
+    <woot-modal v-model:show="showEditModal">
+      <div class="p-6 flex flex-col gap-4">
+        <h2 class="text-lg font-semibold">
+          {{ $t('CONVERSATION.CONTEXT_MENU.EDIT') }}
+        </h2>
+        <textarea
+          v-model="editedContent"
+          class="w-full rounded-md border border-n-strong bg-n-background p-3"
+          rows="4"
+          :aria-label="$t('CONVERSATION.CONTEXT_MENU.EDIT')"
+        />
+        <div class="flex justify-end gap-2">
+          <NextButton
+            slate
+            :label="$t('CONVERSATION.CONTEXT_MENU.DELETE_CONFIRMATION.CANCEL')"
+            @click="showEditModal = false"
+          />
+          <NextButton
+            :disabled="
+              !editedContent.trim() ||
+              editedContent === message.content ||
+              isSavingEdit
+            "
+            :label="$t('CONVERSATION.CONTEXT_MENU.SAVE_EDIT')"
+            @click="saveEdit"
+          />
+        </div>
+      </div>
+    </woot-modal>
     <woot-delete-modal
       v-if="showDeleteModal && enabledOptions['delete']"
       v-model:show="showDeleteModal"
@@ -216,6 +277,15 @@ export default {
           }"
           variant="icon"
           @click.stop="handleReplyTo"
+        />
+        <MenuItem
+          v-if="enabledOptions['edit']"
+          :option="{
+            icon: 'edit',
+            label: $t('CONVERSATION.CONTEXT_MENU.EDIT'),
+          }"
+          variant="icon"
+          @click.stop="openEditModal"
         />
         <MenuItem
           v-if="enabledOptions['copy']"
