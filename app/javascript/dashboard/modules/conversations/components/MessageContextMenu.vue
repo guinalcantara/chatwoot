@@ -17,6 +17,7 @@ import { useTrack } from 'dashboard/composables';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import ReportCaptainMessageDialog from './ReportCaptainMessageDialog.vue';
 import MessageApi from 'dashboard/api/inbox/message';
+import { useUISettings } from 'dashboard/composables/useUISettings';
 
 export default {
   components: {
@@ -51,9 +52,11 @@ export default {
   emits: ['open', 'close', 'replyTo'],
   setup() {
     const { getPlainText } = useMessageFormatter();
+    const { isEditorHotKeyEnabled } = useUISettings();
 
     return {
       getPlainText,
+      isEditorHotKeyEnabled,
     };
   },
   data() {
@@ -153,6 +156,18 @@ export default {
       this.handleClose();
       this.showEditModal = true;
     },
+    handleEditKeydown(event) {
+      if (event.isComposing || event.shiftKey || event.altKey) return;
+
+      const hasModifier = event.metaKey || event.ctrlKey;
+      if (
+        (hasModifier && this.isEditorHotKeyEnabled('cmd_enter')) ||
+        (!hasModifier && this.isEditorHotKeyEnabled('enter'))
+      ) {
+        event.preventDefault();
+        this.saveEdit();
+      }
+    },
     async saveEdit() {
       if (
         !this.editedContent.trim() ||
@@ -223,6 +238,7 @@ export default {
           class="w-full rounded-md border border-n-strong bg-n-background p-3"
           rows="4"
           :aria-label="$t('CONVERSATION.CONTEXT_MENU.EDIT')"
+          @keydown.enter.stop="handleEditKeydown"
         />
         <div class="flex justify-end gap-2">
           <NextButton

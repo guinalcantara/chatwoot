@@ -286,6 +286,7 @@ pt_BR:
         unsupported: 'A edição de mensagens não é compatível com esta caixa de entrada'
         invalid_error: 'O erro de edição deve ser um texto curto'
         invalid_content: 'O conteúdo deve ser um texto não vazio'
+        invalid_source_id: 'O identificador da mensagem WhatsApp é inválido'
         not_editable: 'Esta mensagem não pode ser editada'
         unchanged: 'O conteúdo não foi alterado'
       instagram_story_content: '%{story_sender} mencionou você na conversa: '

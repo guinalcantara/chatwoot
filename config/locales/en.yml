@@ -314,6 +314,7 @@ en:
         unsupported: 'Message editing is not supported by this inbox'
         invalid_error: 'Edit error must be a short string'
         invalid_content: 'Content must be a non-empty string'
+        invalid_source_id: 'Source ID must be a WhatsApp message ID'
         not_editable: 'Message cannot be edited'
         unchanged: 'Content is unchanged'
       instagram_story_content: '%{story_sender} mentioned you in the story: '

@@ -16,6 +16,7 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   def update
     return update_content if params.key?(:content)
     return update_edit_error if params.key?(:edit_error)
+    return update_source_id if params.key?(:source_id)
 
     Messages::StatusUpdateService.new(message, permitted_params[:status], permitted_params[:external_error]).perform
     @message = message
@@ -90,7 +91,20 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def permitted_params
-    params.permit(:id, :target_language, :status, :external_error, :content, :edit_error)
+    params.permit(:id, :target_language, :status, :external_error, :content, :edit_error, :source_id)
+  end
+
+  def update_source_id
+    return render_could_not_create_error(I18n.t('conversations.messages.editing.unsupported')) unless editing_supported?
+
+    source_id = permitted_params[:source_id]
+    unless source_id.is_a?(String) && source_id.match?(/\AWAID:\S{1,500}\z/)
+      return render_could_not_create_error(I18n.t('conversations.messages.editing.invalid_source_id'))
+    end
+    return render_could_not_create_error(I18n.t('conversations.messages.editing.not_editable')) unless message.outgoing?
+
+    message.update!(source_id: source_id)
+    @message = message
   end
 
   def update_edit_error
@@ -144,7 +158,9 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   # API inbox check
   def ensure_api_inbox
     return if @conversation.inbox.api?
-    return render_could_not_create_error(I18n.t('conversations.messages.editing.unsupported')) if params.key?(:content)
+    if params.key?(:content) || params.key?(:source_id)
+      return render_could_not_create_error(I18n.t('conversations.messages.editing.unsupported'))
+    end
 
     render json: { error: 'Message status update is only allowed for API inboxes' }, status: :forbidden
   end
