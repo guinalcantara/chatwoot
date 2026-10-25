@@ -47,7 +47,7 @@ import WhatsappReferral from './bubbles/Text/WhatsappReferral.vue';
 import MessageError from './MessageError.vue';
 import ContextMenu from 'dashboard/modules/conversations/components/MessageContextMenu.vue';
 import { useBranding } from 'shared/composables/useBranding';
-import { canEditMessage } from './messageEditing';
+import { canShowEditMessage } from './messageEditing';
 
 /**
  * @typedef {Object} Attachment
@@ -150,13 +150,6 @@ const { t } = useI18n();
 const route = useRoute();
 const inboxGetter = useMapGetter('inboxes/getInbox');
 const inbox = computed(() => inboxGetter.value(props.inboxId) || {});
-const editDeadline = props.createdAt * 1000 + 15 * 60 * 1000;
-const editWindowExpired = ref(Date.now() >= editDeadline);
-if (!editWindowExpired.value) {
-  useTimeoutFn(() => {
-    editWindowExpired.value = true;
-  }, editDeadline - Date.now());
-}
 const isOnChatwootCloud = useMapGetter('globalConfig/isOnChatwootCloud');
 const { replaceInstallationName } = useBranding();
 
@@ -391,14 +384,11 @@ const payloadForContextMenu = computed(() => {
     content_attributes: props.contentAttributes,
     content: props.content,
     conversation_id: props.conversationId,
+    createdAt: props.createdAt,
+    sourceId: props.sourceId,
+    senderName: props.sender?.availableName ?? props.sender?.name,
   };
 });
-
-const isEditableMessage = computed(
-  () =>
-    !editWindowExpired.value &&
-    canEditMessage(props, inbox.value, props.currentUserId)
-);
 
 const contextMenuEnabledOptions = computed(() => {
   const hasText = !!props.content;
@@ -410,7 +400,7 @@ const contextMenuEnabledOptions = computed(() => {
     props.status === MESSAGE_STATUS.PROGRESS;
 
   return {
-    edit: isEditableMessage.value,
+    edit: canShowEditMessage(props, inbox.value, props.currentUserId),
     copy: hasText,
     delete:
       (hasText || hasAttachments) &&

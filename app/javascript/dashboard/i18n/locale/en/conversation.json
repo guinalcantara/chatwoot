@@ -367,6 +367,8 @@
       "SAVE_EDIT": "Save changes",
       "EDITED": "Edited",
       "EDIT_FAILED": "Could not update this message on WhatsApp",
+      "EDIT_PENDING": "Wait for this message to be sent before editing it.",
+      "EDIT_EXPIRED": "The 15-minute window to edit this message has ended.",
       "COPY": "Copy",
       "REPLY_TO": "Reply to this message",
       "DELETE": "Delete",
