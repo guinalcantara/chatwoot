@@ -18,6 +18,11 @@ import NextButton from 'dashboard/components-next/button/Button.vue';
 import ReportCaptainMessageDialog from './ReportCaptainMessageDialog.vue';
 import MessageApi from 'dashboard/api/inbox/message';
 import { useUISettings } from 'dashboard/composables/useUISettings';
+import {
+  editUnavailableReason,
+  shouldSubmitEditOnEnter,
+  splitMessageSignature,
+} from 'dashboard/components-next/message/messageEditing';
 
 export default {
   components: {
@@ -65,6 +70,7 @@ export default {
       showDeleteModal: false,
       showEditModal: false,
       editedContent: '',
+      editSignature: '',
       isSavingEdit: false,
     };
   },
@@ -85,6 +91,9 @@ export default {
     },
     messageContent() {
       return this.message.content;
+    },
+    fullEditedContent() {
+      return `${this.editSignature}${this.editedContent}`;
     },
     contentAttributes() {
       return useSnakeCase(
@@ -152,18 +161,27 @@ export default {
       this.showDeleteModal = true;
     },
     openEditModal() {
-      this.editedContent = this.message.content;
       this.handleClose();
+      const reason = editUnavailableReason(this.message);
+      if (reason) {
+        const alert =
+          reason === 'expired'
+            ? this.$t('CONVERSATION.CONTEXT_MENU.EDIT_EXPIRED')
+            : this.$t('CONVERSATION.CONTEXT_MENU.EDIT_PENDING');
+        useAlert(alert);
+        return;
+      }
+
+      const { signature, body } = splitMessageSignature(
+        this.message.content,
+        this.message.senderName
+      );
+      this.editSignature = signature;
+      this.editedContent = body;
       this.showEditModal = true;
     },
     handleEditKeydown(event) {
-      if (event.isComposing || event.shiftKey || event.altKey) return;
-
-      const hasModifier = event.metaKey || event.ctrlKey;
-      if (
-        (hasModifier && this.isEditorHotKeyEnabled('cmd_enter')) ||
-        (!hasModifier && this.isEditorHotKeyEnabled('enter'))
-      ) {
+      if (shouldSubmitEditOnEnter(event, this.isEditorHotKeyEnabled)) {
         event.preventDefault();
         this.saveEdit();
       }
@@ -171,7 +189,7 @@ export default {
     async saveEdit() {
       if (
         !this.editedContent.trim() ||
-        this.editedContent === this.message.content ||
+        this.fullEditedContent === this.message.content ||
         this.isSavingEdit
       )
         return;
@@ -181,7 +199,7 @@ export default {
         const { data } = await MessageApi.edit(
           this.conversationId,
           this.messageId,
-          this.editedContent
+          this.fullEditedContent
         );
         this.$store.dispatch('updateMessage', data);
         this.showEditModal = false;
@@ -249,7 +267,7 @@ export default {
           <NextButton
             :disabled="
               !editedContent.trim() ||
-              editedContent === message.content ||
+              fullEditedContent === message.content ||
               isSavingEdit
             "
             :label="$t('CONVERSATION.CONTEXT_MENU.SAVE_EDIT')"
